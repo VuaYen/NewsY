@@ -27,7 +27,11 @@ gulp.task('webserver', function() {
     webserver({
       serverReload: {
         dir: dest,
+<<<<<<< HEAD
+        config: {verbose: true, debounce: 1000}
+=======
         config: { verbose: true, debounce: 1000 }
+>>>>>>> b3ad9b5b8e46bbaca7e5b29396537c25ef449bd6
       },
       port: 3000,
       open: true

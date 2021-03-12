@@ -1,3 +1,71 @@
+<<<<<<< HEAD
+$(function() {
+  var file, droppedImage;
+  var target = $('.dropzone');
+
+  target
+    .on('dragover', function() {
+      target.addClass('dragover');
+      return false;
+    })
+    .on('dragend', function() {
+      target.removeClass('dragover');
+      return false;
+    })
+    .on('dragleave', function() {
+      target.removeClass('dragover');
+    })
+    .on('drop', function(e) {
+      var fileReader;
+      file = e.originalEvent.dataTransfer.files[0];
+      e.stopPropagation();
+      e.preventDefault();
+      target.removeClass('dragover');
+
+      droppedImage = new Image();
+      fileReader = new FileReader();
+      fileReader.onload = function(e) {
+        droppedImage.src = e.target.result;
+        droppedImage.className = 'picture';
+        target.html(droppedImage);
+        detectImageFaces();
+      };
+      fileReader.readAsDataURL(file);
+    });
+
+  function detectImageFaces() {
+    if (droppedImage !== undefined) {
+      $('.face').remove();
+      $('.warning').remove();
+      $('.picture').faceDetection({
+        complete: function(faces) {
+          for (let i = 0; i < faces.length; i++) {
+            $('<div>', {
+              class: 'face',
+              css: {
+                position: 'absolute',
+                left: faces[i].x * faces[i].scaleX + 'px',
+                top: faces[i].y * faces[i].scaleY + 'px',
+                width:
+                  faces[i].width * faces[i].scaleX + 'px',
+                height:
+                  faces[i].height * faces[i].scaleY + 'px'
+              } // css
+            }).insertAfter(this); // div
+          } //loop through faces
+        } // complete
+      }); // face detection
+    } else {
+      var warningMsg = $('.warning').html(
+        '<p class="alert alert-danger">You must drop an image to analyze.</p>'
+      );
+    } // undefined image
+  } // detectImageFaces
+
+  $('#analyze').click(detectImageFaces);
+  $(window).resize(detectImageFaces);
+});
+=======
 (function() {
   let fromDate = '2015-01-01';
   let fromTime = '01:00:00';
@@ -5,57 +73,18 @@
   let toDate = '2015-01-01';
   let toTime = '10:00:00';
 
-  document.querySelector(
-    '#fromDate'
-  ).value = moment(fromDate, 'YYYY-MM-DD').format(
-    'YYYY-MM-DD'
-  );
-
-  document.querySelector(
-    '#fromTime'
-  ).value = moment(fromTime, 'hh:mm:ss').format(
-    'hh:mm:ss'
-  );
-
-  document.querySelector(
-    '#toDate'
-  ).value = moment(toDate, 'YYYY-MM-DD').format(
-    'YYYY-MM-DD'
-  );
-
-  document.querySelector(
-    '#toTime'
-  ).value = moment(toTime, 'hh:mm:ss').format(
-    'hh:mm:ss'
-  );
-
   function generateChart(data) {
     c3.generate({
       data: {
         y: 'barometric_pressure',
         x: 'dates',
         xFormat: '%Y-%m-%d %H:%M:%S',
-        json: data,
-        type: 'scatter',
-        types: {
-          barometric_pressure: 'scatter',
-          coefficient: 'line'
-        }
-      },
-      point: {
-        show: false
+        json: data
       },
       axis: {
         x: {
-          type: 'timeseries',
-          tick: {
-            count: 4,
-            format: '%Y-%m-%d %H:%M:%S'
-          }
+          type: 'timeseries'
         }
-      },
-      subchart: {
-        show: true //subchart
       }
     });
   }
@@ -70,66 +99,11 @@
     })
       .then(response => response.json())
       .then(response => {
-        let pressure =
-          response.barometric_pressure;
-        let sum = pressure.reduce(
-          (a, b) => a + b
-        );
-        let size = pressure.length;
-        let avg = sum / size;
-        let begx = (pressure[0] + avg) / 2;
-        let endx = (pressure[size - 1] + avg) / 2;
-        let slope = (endx - begx) / size;
-
-        // response.average = pressure.map(
-        //   () => avg
-        // );
-
-        // response.delta = pressure.map(
-        //   x => (x + avg) / 2
-        // );
-
-        response.coefficient = pressure.map(
-          (x, i) => begx + i * slope
-        );
         generateChart(response);
       })
       .catch(error => console.error(error));
   }
 
-  document
-    .querySelector('#fromDate')
-    .addEventListener('blur', () => {
-      fromDate = document.querySelector(
-        '#fromDate'
-      ).value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#fromTime')
-    .addEventListener('blur', () => {
-      fromTime = document.querySelector(
-        '#fromTime'
-      ).value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#toDate')
-    .addEventListener('blur', () => {
-      toDate = document.querySelector('#toDate')
-        .value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#toTime')
-    .addEventListener('blur', () => {
-      toTime = document.querySelector('#toTime')
-        .value;
-      loadChart();
-    });
-
   loadChart();
 })();
+>>>>>>> b3ad9b5b8e46bbaca7e5b29396537c25ef449bd6
