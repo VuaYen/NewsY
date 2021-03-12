@@ -1,135 +1,231 @@
 (function() {
-  let fromDate = '2015-01-01';
-  let fromTime = '01:00:00';
+  const occupied = 1;
+  const free = 0;
+  let columnNames = [
+    'A',
+    'B',
+    'C',
+    'D',
+    'E',
+    'F',
+    'G',
+    'H'
+  ];
+  let numColumns = 8;
+  let allSolutions = [];
+  let solutionsQty;
+  let currentSolution = 0;
 
-  let toDate = '2015-01-01';
-  let toTime = '10:00:00';
+  function Board() {
+    this.width = numColumns;
+    this.lastRow = this.width - 1;
+    this.columns = new Array(this.width);
 
-  document.querySelector(
-    '#fromDate'
-  ).value = moment(fromDate, 'YYYY-MM-DD').format(
-    'YYYY-MM-DD'
-  );
+    let numberOfDiagonals = 2 * this.width - 1;
+    this.diagDown = new Array(numberOfDiagonals);
+    this.diagUp = new Array(numberOfDiagonals);
+    this.solutions = [];
 
-  document.querySelector(
-    '#fromTime'
-  ).value = moment(fromTime, 'hh:mm:ss').format(
-    'hh:mm:ss'
-  );
+    for (
+      let index = 0;
+      index < numberOfDiagonals;
+      ++index
+    ) {
+      if (index < this.width) {
+        this.columns[index] = -1;
+      }
+      this.diagDown[index] = free;
+      this.diagUp[index] = free;
+    }
+    this.position = numColumns;
 
-  document.querySelector(
-    '#toDate'
-  ).value = moment(toDate, 'YYYY-MM-DD').format(
-    'YYYY-MM-DD'
-  );
-
-  document.querySelector(
-    '#toTime'
-  ).value = moment(toTime, 'hh:mm:ss').format(
-    'hh:mm:ss'
-  );
-
-  function generateChart(data) {
-    c3.generate({
-      data: {
-        y: 'barometric_pressure',
-        x: 'dates',
-        xFormat: '%Y-%m-%d %H:%M:%S',
-        json: data,
-        type: 'scatter',
-        types: {
-          barometric_pressure: 'scatter',
-          coefficient: 'line'
+    this.tryNewQueen = function(row) {
+      for (
+        let column = 0;
+        column < numColumns;
+        column++
+      ) {
+        if (this.columns[column] >= 0) {
+          continue;
         }
-      },
-      point: {
-        show: false
-      },
-      axis: {
-        x: {
-          type: 'timeseries',
-          tick: {
-            count: 4,
-            format: '%Y-%m-%d %H:%M:%S'
+
+        let diagDownIndex = row + column;
+        if (
+          this.diagDown[diagDownIndex] ===
+          occupied
+        ) {
+          continue;
+        }
+
+        let diagonalUpIndex =
+          this.position - 1 - row + column;
+        if (
+          this.diagUp[diagonalUpIndex] ===
+          occupied
+        ) {
+          continue;
+        }
+
+        this.columns[column] = row;
+        this.diagDown[diagDownIndex] = occupied;
+        this.diagUp[diagonalUpIndex] = occupied;
+
+        if (row === this.width - 1) {
+          this.solutions.push(
+            this.columns.slice(0)
+          );
+
+          for (
+            let rowIndex = 0;
+            rowIndex < this.solutions.length;
+            ++rowIndex
+          ) {
+            let solution = this.solutions[
+              rowIndex
+            ];
+            var line = '';
+            for (
+              let colIndex = 0;
+              colIndex < this.solutions.length;
+              ++colIndex
+            ) {
+              line +=
+                columnNames[colIndex] +
+                (solution[colIndex] + 1 + ' ');
+            }
+          }
+        } else {
+          this.tryNewQueen(row + 1);
+        }
+
+        this.columns[column] = -1;
+        this.diagDown[diagDownIndex] = free;
+        this.diagUp[diagonalUpIndex] = free;
+      }
+    };
+  }
+
+  let myBoard = new Board();
+  myBoard.tryNewQueen(0);
+  solutionsQty = myBoard.solutions.length;
+
+  document.querySelector(
+    '#currentSolution'
+  ).innerHTML = 1;
+
+  document.querySelector(
+    '#totalSolutions'
+  ).innerHTML = solutionsQty;
+
+  for (
+    let rowIndex = 0;
+    rowIndex < myBoard.solutions.length;
+    ++rowIndex
+  ) {
+    let solution = myBoard.solutions[rowIndex];
+    let singleSolution = [];
+    for (
+      let colIndex = 0;
+      colIndex < solution.length;
+      ++colIndex
+    ) {
+      singleSolution.push(
+        columnNames[colIndex] +
+          (solution[colIndex] + 1)
+      );
+    }
+    allSolutions.push(singleSolution);
+  }
+
+  function displaySolution(solutionId) {
+    for (
+      let index = 0;
+      index < allSolutions[solutionId].length;
+      index++
+    ) {
+      document.querySelector(
+        '#' +
+          allSolutions[solutionId][index] +
+          ' .queen'
+      ).style.fill =
+        '#D33682';
+    }
+  }
+
+  function clearBoard() {
+    for (
+      let colIndex = 0;
+      colIndex < columnNames.length;
+      colIndex++
+    ) {
+      for (
+        let rowIndex = 0;
+        rowIndex < numColumns;
+        rowIndex++
+      ) {
+        document.querySelector(
+          '#' +
+            columnNames[colIndex] +
+            (rowIndex + 1) +
+            ' .queen'
+        ).style.fill =
+          'transparent';
+      }
+    }
+  }
+
+  displaySolution(currentSolution);
+
+  document
+    .querySelector('#previous')
+    .addEventListener('click', function(e) {
+      currentSolution--;
+      if (currentSolution < 1) {
+        currentSolution = allSolutions.length - 1;
+      }
+      clearBoard();
+      document.querySelector(
+        '#currentSolution'
+      ).innerHTML =
+        currentSolution + 1;
+      displaySolution(currentSolution);
+    });
+
+  document
+    .querySelector('#next')
+    .addEventListener('click', function(e) {
+      currentSolution++;
+      if (
+        currentSolution >
+        allSolutions.length - 1
+      ) {
+        currentSolution = 0;
+      }
+      clearBoard();
+      document.querySelector(
+        '#currentSolution'
+      ).innerHTML =
+        currentSolution + 1;
+      displaySolution(currentSolution);
+    });
+
+  document
+    .querySelector('#Board')
+    .addEventListener(
+      'click',
+      e => {
+        if (e.target.tagName === 'path') {
+          if (
+            e.target.style.fill ===
+            'rgb(211, 54, 130)'
+          ) {
+            e.target.style.fill = 'transparent';
+          } else {
+            e.target.style.fill =
+              'rgb(211, 54, 130)';
           }
         }
       },
-      subchart: {
-        show: true //subchart
-      }
-    });
-  }
-
-  function loadChart() {
-    fetch('http://pixelprowess.com/i/lake.php', {
-      method: 'POST',
-      body: JSON.stringify({
-        fromDate: fromDate + ' ' + fromTime,
-        toDate: toDate + ' ' + toTime
-      })
-    })
-      .then(response => response.json())
-      .then(response => {
-        let pressure =
-          response.barometric_pressure;
-        let sum = pressure.reduce(
-          (a, b) => a + b
-        );
-        let size = pressure.length;
-        let avg = sum / size;
-        let begx = (pressure[0] + avg) / 2;
-        let endx = (pressure[size - 1] + avg) / 2;
-        let slope = (endx - begx) / size;
-
-        // response.average = pressure.map(
-        //   () => avg
-        // );
-
-        // response.delta = pressure.map(
-        //   x => (x + avg) / 2
-        // );
-
-        response.coefficient = pressure.map(
-          (x, i) => begx + i * slope
-        );
-        generateChart(response);
-      })
-      .catch(error => console.error(error));
-  }
-
-  document
-    .querySelector('#fromDate')
-    .addEventListener('blur', () => {
-      fromDate = document.querySelector(
-        '#fromDate'
-      ).value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#fromTime')
-    .addEventListener('blur', () => {
-      fromTime = document.querySelector(
-        '#fromTime'
-      ).value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#toDate')
-    .addEventListener('blur', () => {
-      toDate = document.querySelector('#toDate')
-        .value;
-      loadChart();
-    });
-
-  document
-    .querySelector('#toTime')
-    .addEventListener('blur', () => {
-      toTime = document.querySelector('#toTime')
-        .value;
-      loadChart();
-    });
-
-  loadChart();
-})();
+      false
+    );
+})(); // IIFE
